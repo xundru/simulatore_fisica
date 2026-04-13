@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Simulatore Interferenza Quantistica</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background: #0a0a12; color: #00f2ff; font-family: 'Segoe UI', sans-serif; text-align: center; padding: 20px; }
+        .container { max-width: 800px; margin: auto; background: #121225; padding: 20px; border-radius: 15px; border: 1px solid #00f2ff; }
+        canvas { background: #000; border-radius: 10px; margin-bottom: 20px; }
+        .controls { display: flex; flex-direction: column; gap: 15px; padding: 20px; }
+        input[type=range] { width: 100%; cursor: pointer; }
+        .status { font-weight: bold; font-size: 1.2em; height: 30px; margin-top: 10px; color: #ff00ff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Simulatore di Interferenza Quantistica (Shor)</h2>
+        <p>Muovi i cursori per far collassare le probabilità sulla risposta corretta.</p>
+        <canvas id="waveCanvas" width="700" height="300"></canvas>
+        <div class="controls">
+            <label>Sincronizzazione Quantistica (Fase)</label>
+            <input type="range" id="syncSlider" min="0" max="100" value="20">
+            <label>Ricerca Periodo r (Frequenza)</label>
+            <input type="range" id="rSlider" min="10" max="100" value="50">
+        </div>
+        <div id="statusMsg" class="status">Analisi in corso...</div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('waveCanvas');
+        const ctx = canvas.getContext('2d');
+        const syncS = document.getElementById('syncSlider');
+        const rS = document.getElementById('rSlider');
+        const msg = document.getElementById('statusMsg');
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const sync = syncS.value / 100;
+            const r = rS.value;
+            
+            // Disegna onde di base (rumore)
+            for(let i=0; i<3; i++) {
+                ctx.beginPath();
+                ctx.strokeStyle = `rgba(0, 242, 255, ${0.2})`;
+                for(let x=0; x<canvas.width; x++) {
+                    let y = 150 + Math.sin(x*0.05 + (Date.now()*0.005) + i) * 50 * (1-sync);
+                    ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            }
+
+            // Onda Risultato
+            ctx.beginPath();
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = sync > 0.8 && Math.abs(r-70) < 5 ? '#ff00ff' : '#00f2ff';
+            
+            for(let x=0; x<canvas.width; x++) {
+                let amplitude = (sync > 0.8 && Math.abs(r-70) < 5) ? 100 : 20;
+                let y = 150 + Math.sin(x * (r/500)) * amplitude * sync;
+                if(x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            if(sync > 0.8 && Math.abs(r-70) < 5) {
+                msg.innerText = "RISPOSTA TROVATA! Periodo r identificato.";
+                msg.style.color = "#00ff00";
+            } else {
+                msg.innerText = "Interferenza distruttiva in corso...";
+                msg.style.color = "#ff00ff";
+            }
+            requestAnimationFrame(draw);
+        }
+        draw();
+    </script>
+</body>
+</html>
